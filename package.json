@@ -1,0 +1,15 @@
+{
+  "name": "vault-recovery-game",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "폐은행 금고를 복구하고 발견물을 수집하는 모바일 웹게임 MVP",
+  "scripts": {
+    "dev": "node scripts/dev-server.mjs",
+    "test": "node --test",
+    "check": "node scripts/validate.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

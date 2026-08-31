@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#07121b" />
+    <meta
+      name="description"
+      content="압력과 열, 소음을 조절해 폐은행 금고를 복구하고 희귀 물품을 발견하는 모바일 웹게임"
+    />
+    <title>Vault Recovery · 금고 복구사</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-one" aria-hidden="true"></div>
+    <div class="ambient ambient-two" aria-hidden="true"></div>
+
+    <div id="app" class="game-shell">
+      <header id="app-header" class="app-header">
+        <button id="brand-home-button" class="brand-button" type="button" aria-label="작업실로 이동">
+          <span class="brand-mark" aria-hidden="true"><span></span></span>
+          <span class="brand-copy">
+            <strong>VAULT RECOVERY</strong>
+            <small>금고 복구사</small>
+          </span>
+        </button>
+
+        <div class="resources" aria-label="보유 자원">
+          <span class="resource-chip coin-chip"><i aria-hidden="true">₩</i><b id="header-coins">0</b></span>
+          <span class="resource-chip rep-chip"><i aria-hidden="true">★</i><b id="header-reputation">0</b></span>
+        </div>
+
+        <button id="settings-button" class="icon-button" type="button" aria-label="설정 열기">
+          <span aria-hidden="true">⚙</span>
+        </button>
+      </header>
+
+      <main class="screen-stack">
+        <section id="screen-home" class="screen active" data-screen="home" aria-labelledby="home-title">
+          <div class="home-hero panel panel-glow">
+            <div class="hero-kicker"><span id="day-label">DAY 1</span><span>민간 금고 복구 허가소</span></div>
+            <div class="hero-copy">
+              <p class="eyebrow">CLOSED BRANCH UNIT 07</p>
+              <h1 id="home-title">잠긴 금고에는<br /><em>사람의 시간이</em> 남아 있다.</h1>
+              <p>압력·열·소음을 정밀하게 관리해 금고를 열고, 발견한 물건의 운명을 결정하세요.</p>
+            </div>
+
+            <div class="vault-display" aria-hidden="true">
+              <div class="vault-halo"></div>
+              <div class="vault-body">
+                <div class="vault-bolts">
+                  <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                </div>
+                <div class="vault-center">
+                  <div class="vault-wheel"><i></i><i></i><i></i><i></i></div>
+                  <span class="vault-keyhole"></span>
+                </div>
+              </div>
+              <div class="work-light light-left"></div>
+              <div class="work-light light-right"></div>
+            </div>
+
+            <button id="go-jobs-button" class="primary-button hero-action" type="button">
+              <span>오늘의 복구 의뢰</span>
+              <strong>작업 시작</strong>
+              <i aria-hidden="true">→</i>
+            </button>
+          </div>
+
+          <div class="dashboard-grid">
+            <article class="metric-card">
+              <span>완료 의뢰</span>
+              <strong id="metric-completed">0</strong>
+              <small>COMPLETED</small>
+            </article>
+            <article class="metric-card">
+              <span>발견 기록</span>
+              <strong id="metric-collection">0/16</strong>
+              <small>ARCHIVE</small>
+            </article>
+            <article class="metric-card metric-wide">
+              <div>
+                <span>장비 종합 레벨</span>
+                <strong id="metric-upgrades">0</strong>
+              </div>
+              <div class="mini-levels" id="mini-levels" aria-label="장비별 레벨"></div>
+            </article>
+          </div>
+
+          <section class="home-section" aria-labelledby="recent-heading">
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow">RECENT RECORD</span>
+                <h2 id="recent-heading">최근 복구 기록</h2>
+              </div>
+              <button class="text-button" type="button" data-nav="collection">전체 보기</button>
+            </div>
+            <div id="recent-card" class="recent-card empty-state"></div>
+          </section>
+        </section>
+
+        <section id="screen-jobs" class="screen" data-screen="jobs" aria-labelledby="jobs-title">
+          <div class="screen-title-row">
+            <div>
+              <span class="eyebrow">RECOVERY BOARD</span>
+              <h1 id="jobs-title">복구 의뢰 게시판</h1>
+              <p>평판이 높아질수록 더 위험하고 가치 있는 금고가 열립니다.</p>
+            </div>
+            <span class="day-stamp" id="jobs-day-stamp">DAY 1</span>
+          </div>
+          <div id="jobs-list" class="jobs-list"></div>
+        </section>
+
+        <section id="screen-upgrades" class="screen" data-screen="upgrades" aria-labelledby="upgrades-title">
+          <div class="screen-title-row">
+            <div>
+              <span class="eyebrow">EQUIPMENT LAB</span>
+              <h1 id="upgrades-title">장비 작업대</h1>
+              <p>한 단계의 정밀도가 희귀 물품과 금고의 상태를 바꿉니다.</p>
+            </div>
+            <span class="balance-stamp"><b id="upgrade-balance">0</b> C</span>
+          </div>
+          <div id="upgrade-list" class="upgrade-list"></div>
+        </section>
+
+        <section id="screen-collection" class="screen" data-screen="collection" aria-labelledby="collection-title">
+          <div class="screen-title-row collection-title-row">
+            <div>
+              <span class="eyebrow">RECOVERY ARCHIVE</span>
+              <h1 id="collection-title">발견물 기록실</h1>
+              <p>한 번 발견한 물품은 가치와 사연이 기록됩니다.</p>
+            </div>
+            <div class="collection-progress-ring" id="collection-progress-ring">
+              <strong id="collection-percent">0%</strong>
+              <span>수집률</span>
+            </div>
+          </div>
+          <div class="collection-summary panel">
+            <span><b id="collection-discovered">0</b> 발견</span>
+            <span><b id="collection-total">16</b> 전체</span>
+            <span><b id="collection-legendary">0</b> 전설</span>
+          </div>
+          <div id="collection-grid" class="collection-grid"></div>
+        </section>
+
+        <section id="screen-play" class="screen play-screen" data-screen="play" aria-labelledby="play-job-name">
+          <div id="play-environment" class="play-environment environment-dust">
+            <div class="ceiling-pipe" aria-hidden="true"></div>
+            <div class="scene-particles" id="scene-particles" aria-hidden="true"></div>
+
+            <div class="play-topbar">
+              <button id="abort-job-button" class="round-button" type="button" aria-label="작업 포기">×</button>
+              <div class="play-job-copy">
+                <span id="play-client">의뢰인</span>
+                <h1 id="play-job-name">금고</h1>
+              </div>
+              <div class="timer-box" id="timer-box">
+                <span>남은 시간</span>
+                <strong id="play-timer">00:00</strong>
+              </div>
+            </div>
+
+            <div class="vault-work-area" id="vault-work-area" aria-label="금고 해체 장면">
+              <div class="work-lamp lamp-one" aria-hidden="true"></div>
+              <div class="work-lamp lamp-two" aria-hidden="true"></div>
+              <div class="vault-machine" id="vault-machine">
+                <div class="machine-shadow"></div>
+                <div class="machine-frame">
+                  <div class="machine-bolt b1"></div><div class="machine-bolt b2"></div>
+                  <div class="machine-bolt b3"></div><div class="machine-bolt b4"></div>
+                  <div class="machine-door">
+                    <div class="progress-orbit" id="progress-orbit"></div>
+                    <div class="machine-wheel">
+                      <span class="wheel-core"></span>
+                      <i class="spoke s1"></i><i class="spoke s2"></i><i class="spoke s3"></i><i class="spoke s4"></i>
+                    </div>
+                    <div class="drill-unit" id="drill-unit">
+                      <span class="drill-body"></span>
+                      <span class="drill-bit"></span>
+                      <span class="drill-spark spark-a"></span>
+                      <span class="drill-spark spark-b"></span>
+                      <span class="drill-spark spark-c"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stage-indicator" aria-label="잠금축 진행 단계">
+                <span class="stage-dot active" data-stage-dot="1">1</span>
+                <i></i>
+                <span class="stage-dot" data-stage-dot="2">2</span>
+                <i></i>
+                <span class="stage-dot" data-stage-dot="3">3</span>
+                <i></i>
+                <span class="stage-dot" data-stage-dot="4">4</span>
+              </div>
+            </div>
+
+            <div class="play-console" id="play-console">
+              <div class="console-status-row">
+                <div>
+                  <span class="eyebrow">LOCK AXIS <b id="play-stage">01</b></span>
+                  <strong id="play-message">버튼을 누르고 압력을 올리세요</strong>
+                </div>
+                <div class="progress-readout">
+                  <strong id="play-progress">0%</strong>
+                  <span>해체 진행</span>
+                </div>
+              </div>
+
+              <div class="pressure-panel">
+                <div class="pressure-labels"><span>압력 낮음</span><b>정밀 구간 유지</b><span>파손 위험</span></div>
+                <div id="pressure-track" class="pressure-track" aria-label="현재 압력과 목표 구간">
+                  <div id="target-zone" class="target-zone"><span>SAFE</span></div>
+                  <div id="pressure-fill" class="pressure-fill"></div>
+                  <div id="pressure-needle" class="pressure-needle"><i></i></div>
+                  <div class="danger-zone"></div>
+                </div>
+              </div>
+
+              <div class="systems-grid">
+                <div class="system-meter" data-meter="integrity">
+                  <div class="meter-label"><span>내용물 상태</span><b id="integrity-value">100%</b></div>
+                  <div class="meter-track"><i id="integrity-bar"></i></div>
+                </div>
+                <div class="system-meter" data-meter="heat">
+                  <div class="meter-label"><span>드릴 열</span><b id="heat-value">0%</b></div>
+                  <div class="meter-track"><i id="heat-bar"></i></div>
+                </div>
+                <div class="system-meter" data-meter="noise">
+                  <div class="meter-label"><span>소음 경보</span><b id="noise-value">0%</b></div>
+                  <div class="meter-track"><i id="noise-bar"></i></div>
+                </div>
+              </div>
+
+              <button id="hold-button" class="hold-button" type="button">
+                <span class="hold-rings" aria-hidden="true"><i></i><i></i></span>
+                <b>누르고 유지</b>
+                <small>화면 터치 또는 SPACE</small>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section id="screen-result" class="screen result-screen" data-screen="result" aria-labelledby="result-title">
+          <div id="success-result" class="result-layout">
+            <div class="result-kicker"><span>RECOVERY COMPLETE</span><b id="result-grade">A</b></div>
+            <h1 id="result-title">금고가 열렸습니다.</h1>
+            <p id="result-subtitle">내용물 상태를 유지한 채 잠금축을 모두 해체했습니다.</p>
+
+            <div class="reveal-stage" id="reveal-stage">
+              <div class="reveal-rays" aria-hidden="true"></div>
+              <div class="item-card" id="result-item-card">
+                <span class="rarity-badge" id="result-rarity">희귀</span>
+                <div class="item-icon" id="result-icon">◆</div>
+                <span class="item-code" id="result-code">ARCHIVE 00</span>
+                <h2 id="result-item-name">발견물</h2>
+                <p id="result-story">발견물의 이야기가 표시됩니다.</p>
+                <div class="appraisal-row">
+                  <span>감정가</span>
+                  <strong><i>₩</i><b id="result-value">0</b></strong>
+                </div>
+                <div class="condition-row">
+                  <span>보존 상태 <b id="result-condition">0%</b></span>
+                  <div><i id="result-condition-bar"></i></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="result-actions" id="result-actions">
+              <button id="return-item-button" class="choice-button return-choice" type="button">
+                <span>주인에게 반환</span>
+                <strong id="return-reward">수수료 + 평판</strong>
+                <small>적은 수익, 높은 평판</small>
+              </button>
+              <button id="auction-item-button" class="choice-button auction-choice" type="button">
+                <span>즉시 경매</span>
+                <strong id="auction-reward">전액 수익</strong>
+                <small>높은 수익, 낮은 평판</small>
+              </button>
+            </div>
+          </div>
+
+          <div id="failure-result" class="result-layout failure-layout" hidden>
+            <div class="failure-symbol" aria-hidden="true"><span>!</span></div>
+            <span class="eyebrow">RECOVERY FAILED</span>
+            <h1 id="failure-title">작업이 중단됐습니다.</h1>
+            <p id="failure-description">장비를 점검한 뒤 다시 시도하세요.</p>
+            <div class="failure-report panel">
+              <div><span>진행률</span><strong id="failure-progress">0%</strong></div>
+              <div><span>내용물 상태</span><strong id="failure-integrity">0%</strong></div>
+              <div><span>경보 횟수</span><strong id="failure-alarms">0</strong></div>
+            </div>
+            <div class="failure-actions">
+              <button id="retry-job-button" class="primary-button" type="button">같은 의뢰 다시 보기</button>
+              <button class="secondary-button" type="button" data-nav="home">작업실로 돌아가기</button>
+            </div>
+          </div>
+
+          <div id="settlement-result" class="settlement-card panel" hidden>
+            <span class="eyebrow">DAY SETTLEMENT</span>
+            <h2 id="settlement-heading">정산 완료</h2>
+            <div class="settlement-values">
+              <div><span>획득 코인</span><strong id="settlement-coins">+0</strong></div>
+              <div><span>획득 평판</span><strong id="settlement-reputation">+0</strong></div>
+            </div>
+            <button id="settlement-home-button" class="primary-button" type="button">다음 날 작업실로</button>
+          </div>
+        </section>
+      </main>
+
+      <nav id="bottom-nav" class="bottom-nav" aria-label="주요 메뉴">
+        <button type="button" data-nav="home" class="active"><i aria-hidden="true">⌂</i><span>작업실</span></button>
+        <button type="button" data-nav="jobs"><i aria-hidden="true">▧</i><span>의뢰</span></button>
+        <button type="button" data-nav="upgrades"><i aria-hidden="true">⌁</i><span>장비</span></button>
+        <button type="button" data-nav="collection"><i aria-hidden="true">▦</i><span>기록</span></button>
+      </nav>
+
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+      <div id="tutorial-modal" class="modal-backdrop" hidden>
+        <div class="modal-card tutorial-card" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
+          <span class="eyebrow">FIELD MANUAL 01</span>
+          <h2 id="tutorial-title">압력을 안전 구간에 유지하세요.</h2>
+          <div class="tutorial-demo" aria-hidden="true">
+            <div class="demo-track"><span class="demo-zone"></span><i class="demo-needle"></i></div>
+          </div>
+          <ol>
+            <li><b>누르고 유지</b>하면 압력이 올라갑니다.</li>
+            <li>초록색 <b>SAFE 구간</b>에서 해체 진행률이 빠르게 상승합니다.</li>
+            <li>압력이 너무 높거나 열·소음이 위험하면 <b>손을 떼어 냉각</b>하세요.</li>
+          </ol>
+          <button id="tutorial-start-button" class="primary-button" type="button">현장 투입</button>
+        </div>
+      </div>
+
+      <div id="settings-modal" class="modal-backdrop" hidden>
+        <div class="modal-card settings-card" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+          <div class="modal-heading">
+            <div><span class="eyebrow">SYSTEM</span><h2 id="settings-title">설정</h2></div>
+            <button id="settings-close-button" class="icon-button" type="button" aria-label="설정 닫기">×</button>
+          </div>
+          <label class="setting-row">
+            <span><b>효과음</b><small>작업·보상 사운드</small></span>
+            <input id="sound-toggle" type="checkbox" checked />
+            <i class="toggle-ui"></i>
+          </label>
+          <label class="setting-row">
+            <span><b>모션 줄이기</b><small>화면 흔들림과 파티클 감소</small></span>
+            <input id="motion-toggle" type="checkbox" />
+            <i class="toggle-ui"></i>
+          </label>
+          <button id="reset-save-button" class="danger-button" type="button">저장 데이터 초기화</button>
+          <p class="version-label">VAULT RECOVERY · MVP 0.1.0</p>
+        </div>
+      </div>
+
+      <div id="confirm-modal" class="modal-backdrop" hidden>
+        <div class="modal-card confirm-card" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+          <span class="eyebrow">CONFIRM</span>
+          <h2 id="confirm-title">작업을 포기할까요?</h2>
+          <p id="confirm-message">투입 비용은 반환되지 않으며 오늘 작업은 실패로 기록됩니다.</p>
+          <div class="confirm-actions">
+            <button id="confirm-cancel-button" class="secondary-button" type="button">계속 작업</button>
+            <button id="confirm-action-button" class="danger-button" type="button">작업 포기</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <noscript>이 게임을 실행하려면 JavaScript가 필요합니다.</noscript>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "name": "Vault Recovery · 금고 복구사",
+  "short_name": "금고 복구사",
+  "description": "압력과 열, 소음을 조절해 폐은행 금고를 복구하는 모바일 웹게임",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#050c12",
+  "theme_color": "#07121b",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
