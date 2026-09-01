@@ -1,14 +1,15 @@
 {
-  "name": "Vault Recovery · 금고 복구사",
-  "short_name": "금고 복구사",
-  "description": "압력과 열, 소음을 조절해 폐은행 금고를 복구하는 모바일 웹게임",
+  "name": "Vaultbound: Night Shift",
+  "short_name": "Vaultbound",
+  "description": "밤의 도시를 돌며 금고를 복구하고 사라진 사건을 추적하는 픽셀 인디게임",
   "lang": "ko",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#050c12",
-  "theme_color": "#07121b",
+  "background_color": "#07101a",
+  "theme_color": "#07101a",
+  "categories": ["games", "entertainment"],
   "icons": [
     {
       "src": "./favicon.svg",

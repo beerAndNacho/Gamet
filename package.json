@@ -1,13 +1,14 @@
 {
-  "name": "vault-recovery-game",
-  "version": "0.2.0",
+  "name": "vaultbound-night-shift",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "여섯 명의 현장 파트너와 관계 성장을 결합한 금고 복구 모바일 웹게임",
+  "description": "탐색, 금고 해체, 수집과 사건 추적을 결합한 모바일 우선 픽셀 인디게임",
   "scripts": {
     "dev": "node scripts/dev-server.mjs",
-    "test": "node --test",
-    "check": "node scripts/validate.mjs"
+    "check": "node scripts/validate.mjs",
+    "test": "node --test tests/pixel-game.test.js",
+    "simulate": "node scripts/simulate.mjs"
   },
   "engines": {
     "node": ">=20"
