@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - '.vaultbound-release.tgz.b64'
+      - '.vaultbound-release.ready'
 
 permissions:
   contents: write
@@ -23,19 +23,20 @@ jobs:
           fetch-depth: 0
       - name: Decode validated release
         run: |
-          base64 --decode .vaultbound-release.tgz.b64 > /tmp/vaultbound-release.tgz
+          cat .vaultbound-release.part-* | base64 --decode > /tmp/vaultbound-release.tgz
           tar -tzf /tmp/vaultbound-release.tgz >/dev/null
       - name: Replace repository contents
         run: |
           find . -mindepth 1 -maxdepth 1 \
             ! -name .git \
             ! -name .github \
-            ! -name .vaultbound-release.tgz.b64 \
+            ! -name '.vaultbound-release.part-*' \
+            ! -name .vaultbound-release.ready \
             -exec rm -rf {} +
           find .github -mindepth 1 -maxdepth 1 ! -name workflows -exec rm -rf {} +
           find .github/workflows -type f ! -name apply-pixel-release.yml -delete
           tar -xzf /tmp/vaultbound-release.tgz -C .
-          rm -f .vaultbound-release.tgz.b64
+          rm -f .vaultbound-release.part-* .vaultbound-release.ready
           rm -f .github/workflows/apply-pixel-release.yml
       - name: Validate extracted game
         run: |
