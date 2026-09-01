@@ -496,10 +496,76 @@ function drawGuard(ctx, guard, time) {
   rect(ctx, guard.x + Math.cos(guard.angle) * 5 - 1, guard.y - 7 + Math.sin(guard.angle) * 5, 3, 3, guard.detecting ? COLORS.red : COLORS.gold);
 }
 
+function missionObjective(mission) {
+  return mission.objects.find((object) => object.type === 'panel' && !object.done)
+    ?? mission.objects.find((object) => object.type === 'vault')
+    ?? null;
+}
+
+function objectiveLabel(object) {
+  return object?.type === 'panel' ? '배전반' : object?.type === 'vault' ? '금고실' : '목표';
+}
+
+function drawObjectiveMarker(ctx, object, time) {
+  if (!object) return;
+  const pulse = Math.floor(time / 260) % 2;
+  const color = object.type === 'vault' ? COLORS.gold : COLORS.cyan;
+  const y = object.y - (object.type === 'vault' ? 36 : 25) - pulse * 2;
+  rect(ctx, object.x - 9, y, 18, 2, color);
+  rect(ctx, object.x - 9, y, 2, 6, color);
+  rect(ctx, object.x + 7, y, 2, 6, color);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(object.x, y + 10);
+  ctx.lineTo(object.x - 5, y + 4);
+  ctx.lineTo(object.x + 5, y + 4);
+  ctx.closePath();
+  ctx.fill();
+  text(ctx, 'TARGET', object.x, y - 8, color, 6, 'center');
+}
+
+function drawObjectiveCompass(ctx, mission, target, time) {
+  if (!target) return;
+  const dx = target.x - mission.player.x;
+  const dy = target.y - mission.player.y;
+  const distanceTiles = Math.max(1, Math.round(Math.hypot(dx, dy) / TILE));
+  const angle = Math.atan2(dy, dx);
+  const directions = ['→', '↘', '↓', '↙', '←', '↖', '↑', '↗'];
+  const normalized = (angle + Math.PI * 2) % (Math.PI * 2);
+  const direction = directions[Math.round(normalized / (Math.PI / 4)) % 8];
+  const label = `${direction} ${objectiveLabel(target)} ${distanceTiles}칸`;
+  const width = Math.min(146, 42 + label.length * 7);
+  const x = Math.round((VIEW_WIDTH - width) / 2);
+  const pulse = Math.floor(time / 320) % 2;
+  rect(ctx, x, 146, width, 19, 'rgba(4,12,18,0.92)');
+  rect(ctx, x + 1, 147, width - 2, 17, '#102637');
+  rect(ctx, x + 1, 147, 3, 17, target.type === 'vault' ? COLORS.gold : COLORS.cyan);
+  text(ctx, label, VIEW_WIDTH / 2 + pulse, 152, target.type === 'vault' ? COLORS.gold : COLORS.cyan, 7, 'center');
+
+  const screenX = target.x - mission.camera.x;
+  const screenY = target.y - mission.camera.y;
+  const visibleTarget = screenX > 18 && screenX < VIEW_WIDTH - 18 && screenY > 172 && screenY < 560;
+  if (visibleTarget) return;
+  const edgeX = Math.min(VIEW_WIDTH - 22, Math.max(22, screenX));
+  const edgeY = Math.min(555, Math.max(178, screenY));
+  ctx.save();
+  ctx.translate(edgeX, edgeY);
+  ctx.rotate(angle);
+  ctx.fillStyle = target.type === 'vault' ? COLORS.gold : COLORS.cyan;
+  ctx.beginPath();
+  ctx.moveTo(8 + pulse * 2, 0);
+  ctx.lineTo(-5, -6);
+  ctx.lineTo(-5, 6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
 export function drawField(ctx, mission, state, time) {
   const stage = mission.stage;
   clearCanvas(ctx, stage.palette[0]);
   const camera = mission.camera;
+  const target = missionObjective(mission);
   ctx.save();
   ctx.translate(-Math.round(camera.x), -Math.round(camera.y));
 
@@ -518,6 +584,7 @@ export function drawField(ctx, mission, state, time) {
     if ((object.type === 'intel' || object.type === 'coin') && object.collected) continue;
     drawFieldObject(ctx, object, stage, time, mission.nearObject?.id === object.id);
   }
+  drawObjectiveMarker(ctx, target, time);
   for (const guard of mission.guards) drawGuard(ctx, guard, time);
 
   const crew = getCrew(state.selectedCrew);
@@ -539,6 +606,7 @@ export function drawField(ctx, mission, state, time) {
   }
 
   ctx.restore();
+  drawObjectiveCompass(ctx, mission, target, time);
 
   // Field HUD inside canvas
   const top = 107;

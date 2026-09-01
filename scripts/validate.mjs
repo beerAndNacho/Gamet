@@ -7,9 +7,10 @@ const required = [
   'index.html', 'styles.css', 'styles/advanced.css', 'favicon.svg', 'manifest.webmanifest', 'vercel.json',
   'sw.js', 'src/main.js', 'src/game.js', 'src/pixel.js', 'src/audio.js',
   'src/content.js', 'src/state.js', 'src/advanced.js', 'src/advanced-system.js',
-  'scripts/dev-server.mjs', 'scripts/simulate.mjs', 'scripts/simulate-advanced.mjs',
-  'tests/pixel-game.test.js', 'tests/advanced-system.test.js',
-  'docs/GAME_DESIGN.md', 'docs/ADVANCED_SYSTEMS.md', 'README.md',
+  'src/mission-layouts.js', 'src/vault-balance.js',
+  'scripts/dev-server.mjs', 'scripts/simulate.mjs', 'scripts/simulate-advanced.mjs', 'scripts/simulate-review.mjs',
+  'tests/pixel-game.test.js', 'tests/advanced-system.test.js', 'tests/review-improvements.test.js',
+  'docs/GAME_DESIGN.md', 'docs/ADVANCED_SYSTEMS.md', 'docs/PLAYTEST_REVIEW.md', 'README.md',
 ];
 
 const missing = required.filter((path) => !existsSync(join(root, path)));
@@ -96,6 +97,11 @@ if (!main.includes('installAdvancedSystems(game)')) {
   process.exit(1);
 }
 
+if (!game.includes("'./mission-layouts.js'") || !game.includes("'./vault-balance.js'")) {
+  console.error('Reviewed mission layouts or vault balance tuning are not connected to src/game.js.');
+  process.exit(1);
+}
+
 const advanced = readFileSync(join(root, 'src/advanced.js'), 'utf8');
 if (!advanced.includes("href = './styles/advanced.css'") || !advanced.includes('startGamepadLoop')) {
   console.error('Advanced stylesheet or gamepad integration is missing.');
@@ -106,6 +112,7 @@ const sw = readFileSync(join(root, 'sw.js'), 'utf8');
 for (const path of [
   'index.html', 'styles.css', 'styles/advanced.css', 'src/main.js', 'src/game.js',
   'src/pixel.js', 'src/content.js', 'src/state.js', 'src/advanced.js', 'src/advanced-system.js',
+  'src/mission-layouts.js', 'src/vault-balance.js',
 ]) {
   if (!sw.includes(`./${path}`)) {
     console.error(`Service worker cache is missing ./${path}`);

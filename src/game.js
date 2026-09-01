@@ -45,6 +45,8 @@ import {
   drawTitleCrew,
 } from './pixel.js';
 import { playSfx, setAudioEnabled, setMusicScene, unlockAudio } from './audio.js';
+import { buildMissionLayout } from './mission-layouts.js';
+import { getVaultTuning } from './vault-balance.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -954,59 +956,24 @@ export class VaultboundGame {
   }
 
   createMission(stage) {
-    const cols = 40;
-    const rows = 48;
-    const map = Array.from({ length: rows }, (_, row) => Array.from({ length: cols }, (_, col) => {
-      if (row === 0 || col === 0 || row === rows - 1 || col === cols - 1) return 1;
-      return 0;
-    }));
-
-    // Four floor bands with alternating doors guarantee a traversable route.
-    const wallRows = [10, 20, 30, 39];
-    const gaps = [[5, 6, 30, 31], [12, 13, 34, 35], [4, 5, 23, 24], [16, 17, 34, 35]];
-    wallRows.forEach((row, index) => {
-      for (let col = 2; col < cols - 2; col += 1) {
-        if (!gaps[index].includes(col)) map[row][col] = 1;
-      }
-    });
-    const verticals = [9, 27];
-    verticals.forEach((col, index) => {
-      for (let row = 4; row < rows - 4; row += 1) {
-        const gap = index === 0 ? [14, 15, 34, 35, 43, 44] : [6, 7, 25, 26, 42, 43];
-        if (!gap.includes(row) && !wallRows.includes(row)) map[row][col] = 1;
-      }
-    });
-
-    const panelsRequired = Math.min(3, 1 + Math.floor(stage.difficulty / 3));
-    const panelPositions = [
-      { x: 5 * TILE + 8, y: 8 * TILE + 8 },
-      { x: 34 * TILE + 8, y: 24 * TILE + 8 },
-      { x: 16 * TILE + 8, y: 36 * TILE + 8 },
-    ].slice(0, panelsRequired);
+    const layout = buildMissionLayout(stage, TILE);
+    const panelsRequired = layout.panelPositions.length;
     const objects = [
-      ...panelPositions.map((position, index) => ({ id: `panel-${index}`, type: 'panel', ...position, done: false })),
-      { id: 'vault', type: 'vault', x: 20 * TILE, y: 4 * TILE + 8 },
-      { id: 'intel-a', type: 'intel', x: 31 * TILE, y: 15 * TILE, collected: false },
-      { id: 'intel-b', type: 'intel', x: 7 * TILE, y: 27 * TILE, collected: false },
-      { id: 'coin-a', type: 'coin', x: 34 * TILE, y: 44 * TILE, collected: false },
-      { id: 'coin-b', type: 'coin', x: 15 * TILE, y: 17 * TILE, collected: false },
-      { id: 'cover-a', type: 'cover', x: 14 * TILE, y: 14 * TILE },
-      { id: 'cover-b', type: 'cover', x: 31 * TILE, y: 34 * TILE },
-      { id: 'cover-c', type: 'cover', x: 5 * TILE, y: 42 * TILE },
+      ...layout.panelPositions.map((position, index) => ({ id: `panel-${index}`, type: 'panel', ...position, done: false })),
+      { id: 'vault', type: 'vault', ...layout.vaultPosition },
+      ...layout.pickupPositions.map((position, index) => ({
+        id: `${position.type}-${index}`,
+        type: position.type,
+        x: position.x,
+        y: position.y,
+        collected: false,
+      })),
+      ...layout.coverPositions.map((position, index) => ({ id: `cover-${index}`, type: 'cover', ...position })),
     ];
 
     const guardCount = Math.min(7, 1 + Math.floor(stage.difficulty / 2));
-    const paths = [
-      [{ x: 13 * TILE, y: 44 * TILE }, { x: 30 * TILE, y: 44 * TILE }],
-      [{ x: 31 * TILE, y: 33 * TILE }, { x: 31 * TILE, y: 23 * TILE }],
-      [{ x: 4 * TILE, y: 26 * TILE }, { x: 20 * TILE, y: 26 * TILE }],
-      [{ x: 16 * TILE, y: 17 * TILE }, { x: 34 * TILE, y: 17 * TILE }],
-      [{ x: 4 * TILE, y: 7 * TILE }, { x: 18 * TILE, y: 7 * TILE }],
-      [{ x: 30 * TILE, y: 7 * TILE }, { x: 30 * TILE, y: 17 * TILE }],
-      [{ x: 13 * TILE, y: 34 * TILE }, { x: 23 * TILE, y: 34 * TILE }],
-    ];
     const guards = Array.from({ length: guardCount }, (_, index) => {
-      const path = paths[index];
+      const path = layout.guardPaths[index % layout.guardPaths.length].map((position) => ({ ...position }));
       const type = stage.hazards.includes('drone') && index % 3 === 1
         ? 'drone'
         : stage.hazards.includes('camera') && index === guardCount - 1
@@ -1020,7 +987,7 @@ export class VaultboundGame {
         path,
         target: 1,
         speed: type === 'camera' ? 0 : 22 + stage.difficulty * 1.8,
-        angle: 0,
+        angle: type === 'camera' ? -Math.PI / 2 : 0,
         rotateSpeed: type === 'camera' ? 0.55 + stage.difficulty * 0.025 : 0,
         range: 64 + stage.difficulty * 2.5,
         cone: 0.45,
@@ -1031,11 +998,12 @@ export class VaultboundGame {
 
     return {
       stage,
-      map,
-      cols,
-      rows,
-      player: { x: 20 * TILE, y: 45 * TILE, direction: 'up', moving: false },
-      companion: { x: 20 * TILE - 15, y: 45 * TILE + 12, direction: 'up', moving: false },
+      map: layout.map,
+      cols: layout.cols,
+      rows: layout.rows,
+      layoutSignature: layout.signature,
+      player: { ...layout.start, direction: 'up', moving: false },
+      companion: { x: layout.start.x - 18, y: layout.start.y + 14, direction: 'up', moving: false },
       camera: { x: 0, y: 96 },
       guards,
       objects,
@@ -1379,24 +1347,24 @@ export class VaultboundGame {
   }
 
   createVaultState(stage) {
-    const locks = stage.boss ? 4 : 3;
-    const drill = this.state.upgrades.drill ?? 0;
-    const width = clamp(29 - stage.difficulty * 1.15 + drill * 1.35, 12, 31);
+    const tuning = getVaultTuning(stage, this.state.upgrades);
     return {
       stage,
-      locks,
+      tuning,
+      locks: tuning.locks,
       currentLock: 1,
       pressure: 0,
       safeCenter: 47,
-      safeWidth: width,
-      baseWidth: width,
+      safeWidth: tuning.baseWidth,
+      baseWidth: tuning.baseWidth,
       progress: 0,
       totalProgress: 0,
       heat: 0,
       noise: 0,
       integrity: 100,
-      timeLeft: 42 + drill * 1.2 - stage.difficulty * 0.55 + (stage.boss ? 9 : 0),
+      timeLeft: tuning.timeLimit,
       comboSeconds: 0,
+      comboGrace: 0,
       combo: 1,
       maxCombo: 1,
       holding: false,
@@ -1410,6 +1378,7 @@ export class VaultboundGame {
       lootHintBoost: 0,
       alarmStrikes: 0,
       safeWasActive: false,
+      rescueUsed: false,
     };
   }
 
@@ -1429,9 +1398,12 @@ export class VaultboundGame {
   updateVault(dt) {
     const vault = this.vault;
     if (!vault || vault.finished) return;
+    const tuning = vault.tuning ?? getVaultTuning(vault.stage, this.state.upgrades);
+    vault.tuning = tuning;
     vault.timeLeft = Math.max(0, vault.timeLeft - dt);
     vault.skillCooldown = Math.max(0, vault.skillCooldown - dt);
     vault.skillShield = Math.max(0, vault.skillShield - dt);
+    vault.comboGrace = Math.max(0, (vault.comboGrace ?? 0) - dt);
     vault.nextEvent -= dt;
     if (vault.nextEvent <= 0 && !vault.event && !vault.eventWarning) {
       const events = vault.stage.vaultEvents;
@@ -1454,20 +1426,15 @@ export class VaultboundGame {
       }
     }
 
-    const drill = this.state.upgrades.drill ?? 0;
-    const coolant = this.state.upgrades.coolant ?? 0;
-    const muffler = this.state.upgrades.muffler ?? 0;
-    const centerWave = Math.sin((this.totalTime / 1000) * (0.72 + vault.stage.difficulty * 0.055) + vault.currentLock) * (10 + vault.stage.difficulty * 0.7);
+    const centerWave = Math.sin((this.totalTime / 1000) * tuning.centerSpeed + vault.currentLock) * tuning.centerAmplitude;
     vault.safeCenter = clamp(48 + centerWave, 18, 82);
     let width = vault.baseWidth;
     if (vault.event === 'jam') width *= 0.58;
     if (vault.event === 'fragile') width *= 0.75;
-    vault.safeWidth = clamp(width, 8, 34);
+    vault.safeWidth = clamp(width, 8, 36);
 
-    const pressureRise = 43 - drill * 2.1;
-    const pressureFall = 31 + drill * 1.5;
-    if (vault.holding) vault.pressure += pressureRise * dt;
-    else vault.pressure -= pressureFall * dt;
+    if (vault.holding) vault.pressure += tuning.pressureRise * dt;
+    else vault.pressure -= tuning.pressureFall * dt;
     if (vault.event === 'wave') vault.pressure += (this.state.selectedCrew === 'minhyuk' ? 8 : 14) * dt;
     vault.pressure = clamp(vault.pressure, 0, 100);
 
@@ -1480,38 +1447,40 @@ export class VaultboundGame {
 
     if (vault.holding) {
       if (safe && !scanPunish) {
-        vault.comboSeconds += dt * (exact ? 1.7 : 1.2);
+        vault.comboGrace = tuning.comboGraceSeconds;
+        vault.comboSeconds += dt * (exact ? tuning.exactComboGain : tuning.safeComboGain);
         vault.combo = clamp(1 + Math.floor(vault.comboSeconds / 1.7), 1, 5);
         vault.maxCombo = Math.max(vault.maxCombo, vault.combo);
-        const progressRate = (5.8 + drill * 0.7) * (1 + (vault.combo - 1) * 0.14) * (exact ? 1.12 : 1);
+        const progressRate = tuning.progressRate * (1 + (vault.combo - 1) * 0.14) * (exact ? 1.12 : 1);
         vault.progress += progressRate * dt;
-        vault.heat += (7.4 * (1 - coolant * 0.075) + (vault.event === 'heat' ? 11 : 0)) * dt;
-        vault.noise += 5.2 * (1 - muffler * 0.072) * dt;
+        vault.heat += (tuning.heatGain + (vault.event === 'heat' ? 10.5 : 0)) * dt;
+        vault.noise += tuning.noiseGain * dt;
         if (!vault.safeWasActive) playSfx('safe');
       } else if (vault.pressure < min && !scanPunish) {
-        vault.progress += (0.55 + drill * 0.05) * dt;
-        vault.comboSeconds = Math.max(0, vault.comboSeconds - 2.1 * dt);
+        if (vault.comboGrace <= 0) vault.comboSeconds = Math.max(0, vault.comboSeconds - tuning.missComboDecay * dt);
         vault.combo = clamp(1 + Math.floor(vault.comboSeconds / 1.7), 1, 5);
-        vault.heat += (10.5 * (1 - coolant * 0.075) + (vault.event === 'heat' ? 13 : 0)) * dt;
-        vault.noise += 7 * (1 - muffler * 0.072) * dt;
+        vault.progress += tuning.progressRate * 0.08 * dt;
+        vault.heat += (tuning.heatLowGain + (vault.event === 'heat' ? 12 : 0)) * dt;
+        vault.noise += tuning.noiseLowGain * dt;
       } else {
         const over = Math.max(0, vault.pressure - max);
-        vault.comboSeconds = Math.max(0, vault.comboSeconds - 4 * dt);
+        vault.comboGrace = 0;
+        vault.comboSeconds = Math.max(0, vault.comboSeconds - 3.2 * dt);
         vault.combo = clamp(1 + Math.floor(vault.comboSeconds / 1.7), 1, 5);
-        vault.heat += (17 + over * 0.12) * (1 - coolant * 0.075) * dt;
-        vault.noise += (vault.event === 'scan' ? 34 : 13 + over * 0.11) * (1 - muffler * 0.072) * dt;
+        vault.heat += (tuning.heatOverGain + over * 0.11) * dt;
+        vault.noise += (vault.event === 'scan' ? 34 : tuning.noiseOverGain + over * 0.1) * dt;
         if (vault.skillShield <= 0) {
           const fragile = vault.event === 'fragile' ? 1.65 : 1;
-          vault.integrity -= (4.2 + vault.stage.difficulty * 0.65 + over * 0.08) * fragile * dt;
+          vault.integrity -= (4 + vault.stage.difficulty * 0.62 + over * 0.075) * fragile * dt;
         }
         playSfx('strain');
         if (over > 7) this.bumpShake(0.08);
       }
     } else {
-      vault.comboSeconds = Math.max(0, vault.comboSeconds - 1.15 * dt);
+      if (vault.comboGrace <= 0) vault.comboSeconds = Math.max(0, vault.comboSeconds - tuning.releaseComboDecay * dt);
       vault.combo = clamp(1 + Math.floor(vault.comboSeconds / 1.7), 1, 5);
-      vault.heat -= (15 + coolant * 2.6) * dt;
-      vault.noise -= (10 + muffler * 2.1) * dt;
+      vault.heat -= tuning.coolingRate * dt;
+      vault.noise -= tuning.noiseRecovery * dt;
     }
     vault.safeWasActive = safe && vault.holding;
 
@@ -1524,7 +1493,6 @@ export class VaultboundGame {
       this.bumpShake(0.2);
     }
 
-    // Seojin automatically stops the drill once per lock at critical danger.
     if (this.state.selectedCrew === 'seojin' && (vault.heat > 88 || vault.noise > 92) && !vault.autoStopped) {
       vault.holding = false;
       vault.autoStopped = true;
@@ -1541,7 +1509,21 @@ export class VaultboundGame {
     vault.integrity = clamp(vault.integrity, 0, 100);
 
     if (vault.progress >= 100) this.completeVaultLock();
-    if (vault.timeLeft <= 0) this.failCurrentMission('vault-timeout');
+    if (vault.finished || this.mission?.finished) return;
+    if (vault.timeLeft <= 0) {
+      if (tuning.rescueSeconds > 0 && !vault.rescueUsed) {
+        vault.rescueUsed = true;
+        vault.timeLeft = tuning.rescueSeconds;
+        vault.holding = false;
+        vault.heat = Math.max(0, vault.heat - 14);
+        vault.noise = Math.max(0, vault.noise - 14);
+        ELEMENTS.vaultHold.classList.remove('pressed');
+        this.toast(`윤서진: 훈련용 비상 전원 ${tuning.rescueSeconds}초 투입. 이번엔 끝내자.`);
+        playSfx('skill');
+      } else {
+        this.failCurrentMission('vault-timeout');
+      }
+    }
     if (vault.integrity <= 0) this.failCurrentMission('damaged');
     if (vault.alarmStrikes >= 3) this.failCurrentMission('alarm');
     this.renderVaultUi();
@@ -1554,7 +1536,8 @@ export class VaultboundGame {
     ELEMENTS.vaultTitle.textContent = vault.stage.boss ? '보스 금고 다중 잠금축' : '기계식 잠금축';
     ELEMENTS.vaultTimer.textContent = formatTimer(vault.timeLeft);
     ELEMENTS.vaultCombo.textContent = `×${vault.combo}`;
-    ELEMENTS.vaultProgress.textContent = `${Math.floor(vault.progress)}%`;
+    const overallProgress = ((vault.currentLock - 1) * 100 + vault.progress) / (vault.locks * 100) * 100;
+    ELEMENTS.vaultProgress.textContent = `${Math.floor(overallProgress)}%`;
     ELEMENTS.tensionSafe.style.left = `${vault.safeCenter - vault.safeWidth / 2}%`;
     ELEMENTS.tensionSafe.style.width = `${vault.safeWidth}%`;
     ELEMENTS.tensionFill.style.width = `${vault.pressure}%`;
@@ -1622,7 +1605,8 @@ export class VaultboundGame {
     vault.progress = 0;
     vault.pressure = Math.min(vault.pressure, 45);
     vault.safeCenter = 35 + Math.random() * 30;
-    vault.comboSeconds = Math.max(0, vault.comboSeconds - 1.5);
+    vault.comboSeconds = Math.max(0, vault.comboSeconds - 1.2);
+    vault.comboGrace = vault.tuning?.comboGraceSeconds ?? 0.45;
     vault.autoStopped = false;
     vault.nextEvent = 3.2 + Math.random() * 2;
     this.toast(`잠금축 ${vault.currentLock - 1} 해제 · 다음 축 진입`);
