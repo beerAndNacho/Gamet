@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vault-recovery-v1';
+const CACHE_NAME = 'vault-recovery-v1-crew-20260901';
 const ASSETS = [
   './',
   './index.html',
@@ -7,12 +7,15 @@ const ASSETS = [
   './styles/home.css',
   './styles/play.css',
   './styles/results.css',
+  './styles/characters.css',
   './favicon.svg',
   './manifest.webmanifest',
   './src/data.js',
   './src/engine.js',
   './src/storage.js',
   './src/audio.js',
+  './src/character-data.js',
+  './src/characters.js',
   './src/main.js',
 ];
 
