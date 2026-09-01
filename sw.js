@@ -1,8 +1,8 @@
-const CACHE = 'vaultbound-night-shift-v3-20260901';
+const CACHE = 'vaultbound-night-shift-v4-20260901';
 const ASSETS = [
-  './', './index.html', './styles.css', './favicon.svg', './manifest.webmanifest',
+  './', './index.html', './styles.css', './styles/advanced.css', './favicon.svg', './manifest.webmanifest',
   './src/main.js', './src/game.js', './src/pixel.js', './src/audio.js',
-  './src/content.js', './src/state.js',
+  './src/content.js', './src/state.js', './src/advanced.js', './src/advanced-system.js',
 ];
 
 self.addEventListener('install', (event) => {
