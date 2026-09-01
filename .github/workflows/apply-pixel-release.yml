@@ -38,7 +38,7 @@ jobs:
             | base64 --decode > /tmp/vaultbound-release.tgz
           echo '5880151d6931e313f7f8dea1ce79e29ef761c6c1c3bb7032293008c17a9675ce  /tmp/vaultbound-release.tgz' | sha256sum --check
           tar -tzf /tmp/vaultbound-release.tgz >/dev/null
-      - name: Replace repository contents
+      - name: Replace game contents
         run: |
           find . -mindepth 1 -maxdepth 1 \
             ! -name .git \
@@ -46,11 +46,8 @@ jobs:
             ! -name '.vaultbound-release.part-*' \
             ! -name .vaultbound-release.ready \
             -exec rm -rf {} +
-          find .github -mindepth 1 -maxdepth 1 ! -name workflows -exec rm -rf {} +
-          find .github/workflows -type f ! -name apply-pixel-release.yml -delete
-          tar -xzf /tmp/vaultbound-release.tgz -C .
+          tar --exclude='.github' -xzf /tmp/vaultbound-release.tgz -C .
           rm -f .vaultbound-release.part-* .vaultbound-release.ready
-          rm -f .github/workflows/apply-pixel-release.yml
       - name: Validate extracted game
         run: |
           npm run check
