@@ -1,4 +1,4 @@
-name: CI
+name: Pixel Game CI
 
 on:
   push:
@@ -9,14 +9,17 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  validate-test-simulate:
     runs-on: ubuntu-latest
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Validate static files
+      - name: Validate project
         run: npm run check
-      - name: Run game engine tests
+      - name: Run state and content tests
         run: npm test
+      - name: Run deterministic balance simulation
+        run: npm run simulate
