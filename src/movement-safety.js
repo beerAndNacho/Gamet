@@ -1,13 +1,15 @@
 const EPSILON = 0.05;
 const SEARCH_STEP = 4;
 
-export const HUB_ENTRY_SPAWN = Object.freeze({ x: 232, y: 520 });
+// The original (192, 520) spawn overlaps the REST desk collider. The repaired
+// point sits in the broad centre aisle so all four directions respond at once.
+export const HUB_ENTRY_SPAWN = Object.freeze({ x: 192, y: 330 });
 export const HUB_BOUNDS = Object.freeze({ minX: 13, maxX: 371, minY: 112, maxY: 647 });
 
 const HUB_FALLBACKS = Object.freeze([
   HUB_ENTRY_SPAWN,
-  { x: 224, y: 448 },
-  { x: 192, y: 330 },
+  { x: 220, y: 430 },
+  { x: 232, y: 520 },
   { x: 240, y: 444 },
 ]);
 
@@ -32,7 +34,7 @@ function normalizePoint(point, bounds) {
 /**
  * Finds an open point without allowing a player that starts inside a collider
  * to become permanently trapped. Preferred points are checked before the
- * deterministic radial search so the office entrance remains visually stable.
+ * deterministic radial search so the office entry remains visually stable.
  */
 export function findNearestSafePoint({ origin, collision, bounds, preferred = [], maxRadius = 192 }) {
   if (typeof collision !== 'function') return normalizePoint(origin, bounds);
