@@ -23,7 +23,20 @@ jobs:
           fetch-depth: 0
       - name: Decode validated release
         run: |
-          cat .vaultbound-release.part-* | base64 --decode > /tmp/vaultbound-release.tgz
+          cat \
+            .vaultbound-release.part-00 \
+            .vaultbound-release.part-01 \
+            .vaultbound-release.part-02 \
+            .vaultbound-release.part-03 \
+            .vaultbound-release.part-04 \
+            .vaultbound-release.part-05 \
+            .vaultbound-release.part-06 \
+            .vaultbound-release.part-07x-* \
+            .vaultbound-release.part-08 \
+            .vaultbound-release.part-09 \
+            .vaultbound-release.part-10 \
+            | base64 --decode > /tmp/vaultbound-release.tgz
+          echo '4fc46d80c20c87408fcdeb1be7a87e4dcfbcaba18cdc2249882251481ab2cae2  /tmp/vaultbound-release.tgz' | sha256sum --check
           tar -tzf /tmp/vaultbound-release.tgz >/dev/null
       - name: Replace repository contents
         run: |
