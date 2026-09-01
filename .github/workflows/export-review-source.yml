@@ -1,0 +1,25 @@
+name: Export Review Source
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/export-review-source.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gamet-review-source
+          path: |
+            .
+            !.git
+          include-hidden-files: true
+          retention-days: 1
