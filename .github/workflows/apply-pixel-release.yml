@@ -36,7 +36,7 @@ jobs:
             .vaultbound-release.part-09 \
             .vaultbound-release.part-10 \
             | base64 --decode > /tmp/vaultbound-release.tgz
-          echo '4fc46d80c20c87408fcdeb1be7a87e4dcfbcaba18cdc2249882251481ab2cae2  /tmp/vaultbound-release.tgz' | sha256sum --check
+          echo '5880151d6931e313f7f8dea1ce79e29ef761c6c1c3bb7032293008c17a9675ce  /tmp/vaultbound-release.tgz' | sha256sum --check
           tar -tzf /tmp/vaultbound-release.tgz >/dev/null
       - name: Replace repository contents
         run: |
