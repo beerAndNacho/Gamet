@@ -1,0 +1,42 @@
+name: Apply Advanced Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.vaultbound-advanced.ready'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vaultbound-advanced-release
+  cancel-in-progress: false
+
+jobs:
+  apply-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Decode advanced patch
+        run: |
+          cat .vaultbound-advanced.part-* | base64 --decode > /tmp/vaultbound-advanced-patch.tgz
+          echo '0989ae5eb926d442b1a45e69cc720cdf23d8ebd763ee21b7b23a87e3af5ced60  /tmp/vaultbound-advanced-patch.tgz' | sha256sum --check
+          tar -tzf /tmp/vaultbound-advanced-patch.tgz >/dev/null
+      - name: Apply advanced patch
+        run: tar -xzf /tmp/vaultbound-advanced-patch.tgz -C .
+      - name: Validate game
+        run: |
+          npm run check
+          npm test
+          npm run simulate
+      - name: Commit advanced game release
+        run: |
+          git config user.name "Vaultbound Release Bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add README.md package.json sw.js src/main.js src/advanced.js src/advanced-system.js styles/advanced.css tests/advanced-system.test.js scripts/validate.mjs scripts/simulate-advanced.mjs docs/ADVANCED_SYSTEMS.md
+          git commit -m "feat: add night directives boss protocols and crew episodes"
+          git push origin HEAD:main
