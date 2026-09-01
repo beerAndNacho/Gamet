@@ -1,3 +1,5 @@
+import './characters.js';
+
 let context = null;
 let enabled = true;
 
