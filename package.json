@@ -1,9 +1,9 @@
 {
   "name": "vaultbound-night-shift",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "type": "module",
-  "description": "직접 플레이 검증으로 난이도, 길찾기, 스테이지 구조를 개선한 모바일 우선 픽셀 잠입·금고 복구 인디게임",
+  "description": "실제 좌표 이동, 충돌 자동 복구와 모바일 포인터 캡처를 보강한 픽셀 잠입·금고 복구 인디게임",
   "scripts": {
     "dev": "node scripts/dev-server.mjs",
     "check": "node scripts/validate.mjs",
